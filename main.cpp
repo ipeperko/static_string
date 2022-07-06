@@ -44,36 +44,50 @@ int main()
     static_assert(s1.find("elloww") == s1.npos);
     static_assert(s1.find("ello w") == s1.npos);
 
-    static_assert(s1.substr<0,6>() == static_string("hello "));
-    static_assert(s1.substr<0,2>() == static_string("he"));
-    static_assert(s1.substr<1,3>() == static_string("ell"));
-    static_assert(s1.substr<2,4>() == static_string("llo "));
+    static_assert(s1 == static_string("hello "));
+    static_assert(s1 == "hello ");
+    static_assert(s1 != static_string("yello "));
+    static_assert(s1 != "yello ");
+
+    static_assert(s1.substr<0,6>() == "hello ");
+    static_assert(s1.substr<0,2>() == "he");
+    static_assert(s1.substr<1,3>() == "ell");
+    static_assert(s1.substr<2,4>() == "llo ");
     //s1.substr<2,10>(); // should not compile
 
     //static_assert(s1.prepend("abc ") == static_string("abc hello "));
-    static_assert(s1.prepend(static_string("abc ")) == static_string("abc hello "));
-    static_assert(s1.append(static_string("abc")) == static_string("hello abc"));
+    static_assert(s1.prepend(static_string("abc ")) == "abc hello ");
+    static_assert(s1.prepend("abc ") == "abc hello ");
 
-    static_assert(s1.insert<0>(static_string("abc ")) == static_string("abc hello "));
-    static_assert(s1.insert<6>(static_string("abc ")) == static_string("hello abc "));
-    static_assert(s1.insert<4>(static_string(" ")) == static_string("hell o "));
+    static_assert(s1.append(static_string("abc")) == "hello abc");
+    static_assert(s1.append("abc") == "hello abc");
 
-    static_assert(s1.replace<0>(static_string("yi")) == static_string("yillo "));
-    static_assert(s1.replace<1>(static_string("ig")) == static_string("higlo "));
-    static_assert(s1.replace<4>(static_string("uu")) == static_string("helluu"));
+    static_assert(s1.insert<0>(static_string("abc ")) == "abc hello ");
+    static_assert(s1.insert<0>("abc ") == "abc hello ");
+    static_assert(s1.insert<6>(static_string("abc ")) == "hello abc ");
+    static_assert(s1.insert<6>("abc ") == "hello abc ");
+    static_assert(s1.insert<4>(static_string(" ")) == "hell o ");
+    static_assert(s1.insert<4>(" ") == static_string("hell o "));
+
+    static_assert(s1.replace<0>(static_string("yi")) == "yillo ");
+    static_assert(s1.replace<0>("yi") == "yillo ");
+    static_assert(s1.replace<1>(static_string("ig")) == "higlo ");
+    static_assert(s1.replace<1>("ig") == "higlo ");
+    static_assert(s1.replace<4>(static_string("uu")) == "helluu");
+    static_assert(s1.replace<4>("uu") == "helluu");
     //s1.replace<5>(static_string("uu")); // should not compile
 
-    static_assert(s1.erase<2, 1>() == static_string("helo "));
-    static_assert(s1.erase<0, 1>() == static_string("ello "));
-    static_assert(s1.erase<5, 1>() == static_string("hello"));
-    static_assert(s1.erase<4, 2>() == static_string("hell"));
+    static_assert(s1.erase<2, 1>() == "helo ");
+    static_assert(s1.erase<0, 1>() == "ello ");
+    static_assert(s1.erase<5, 1>() == "hello");
+    static_assert(s1.erase<4, 2>() == "hell");
     // s1.erase<4, 3>() // should not compile
 
-    static_assert(s1.replace<0>(static_string("m")).replace<5>(static_string("w")) == static_string("mellow"));
+    static_assert(s1.replace<0>("m").replace<5>("w") == "mellow");
 
     constexpr static_string copy = s1;
     static_assert(s1 == static_string("hello "));
-    static_assert(copy.find(static_string("hello ")) == 0);
+    static_assert(copy.find("hello ") == 0);
     Log() << s1;
 
     constexpr static_string s2("world");
@@ -105,9 +119,8 @@ int main()
     static_assert(merged3.get<13>() == 'h');
     static_assert(merged3.get<19>() == 'w');
     static_assert(merged3.find("hello world, hello world") == 0);
-    static_assert(merged3.find(static_string("hello world, hello world")) == 0);
-    static_assert(merged3 == static_string("hello world, hello world"));
-    static_assert(merged3 != static_string("yello world, hello world"));
+    static_assert(merged3 == "hello world, hello world");
+    static_assert(merged3 != "yello world, hello world");
     static_assert(merged3.hash() == 12301343714320165257u);
     Log() << merged3;
     Log() << merged3.hash();

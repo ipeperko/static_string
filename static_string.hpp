@@ -1,5 +1,5 @@
-#ifndef STATIC_STRING_H
-#define STATIC_STRING_H
+#ifndef STATIC_STRING_HPP
+#define STATIC_STRING_HPP
 
 #include <array>
 #include <string>
@@ -11,13 +11,22 @@ namespace ss {
 using size_type = size_t;
 
 template<typename CharType, size_type... i>
-static constexpr auto to_array(const CharType* str, std::integer_sequence<size_type, i...>);
+inline constexpr auto to_array(const CharType* str, std::integer_sequence<size_type, i...>)
+{
+    return std::array{ (str[i])... };
+}
 
 template<typename CharType, size_type N>
-static constexpr size_t to_hash(std::array<CharType, N> el);
+inline constexpr auto to_array(const CharType (&str)[N])
+{
+    return to_array(str, std::make_integer_sequence<size_type, N - 1> {});
+}
+
+template<typename CharType, size_type N>
+inline constexpr size_t to_hash(std::array<CharType, N> el);
 
 template<typename CharType, size_type N1, size_type N2>
-constexpr auto concat(std::array<CharType, N1> lhs, std::array<CharType, N2> rhs);
+inline constexpr auto concat(std::array<CharType, N1> lhs, std::array<CharType, N2> rhs);
 
 struct static_string_parameter {};
 
@@ -35,8 +44,8 @@ public:
     constexpr static_string() = default;
 
     template<size_type N>
-    constexpr /* explicit */ static_string(char const (&str)[N])
-        : buffer_(ss::to_array(str, std::make_integer_sequence<size_t, N-1> {}))
+    constexpr explicit static_string(char const (&str)[N])
+        : buffer_(ss::to_array(str))
         , hash_(ss::to_hash(buffer_))
     {
     }
@@ -95,7 +104,7 @@ public:
     {
         static_assert(N > 0);
 
-        if constexpr (substr.size() > length)
+        if (substr.size() > length)
             return npos;
 
         for (size_type p = 0; p + substr.size() <= size(); ++p) {
@@ -127,7 +136,7 @@ public:
     template<size_type N>
     constexpr size_type find(const char (&str)[N]) const
     {
-        return find(ss::to_array(str, std::make_integer_sequence<size_t, N-1> {}));
+        return find(to_array(str));
     }
 
     template<size_type pos, size_type N>
@@ -136,7 +145,7 @@ public:
         static_assert(pos < length);
         static_assert(pos + N <= length);
 
-        auto arr = to_array(&buffer_[pos], std::make_integer_sequence<size_t, N>{});
+        auto const arr = to_array(&buffer_[pos], std::make_integer_sequence<size_t, N>{});
         using substr_type = decltype(arr);
         return static_string<substr_type>(std::forward<substr_type>(arr));
     }
@@ -147,23 +156,51 @@ public:
         return size() == substr.size() && find(substr) == 0;
     }
 
+    template<size_type N>
+    constexpr bool operator==(char_type const (&substr)[N]) const
+    {
+        auto const arr = to_array(substr);
+        using substr_type = decltype(arr);
+        return operator==(static_string<substr_type>(std::forward<substr_type>(arr)));
+    }
+
     template<typename SubstringType>
     constexpr bool operator!=(SubstringType const& substr) const
     {
         return !operator==(substr);
     }
 
+    template<size_type N>
+    constexpr bool operator!=(char_type const (&substr)[N]) const
+    {
+        auto const arr = to_array(substr);
+        using substr_type = decltype(arr);
+        return operator!=(static_string<substr_type>(std::forward<substr_type>(arr)));
+    }
+
     template<typename OtherBufferType>
     constexpr auto append(static_string<OtherBufferType> const& oth) const;
+
+    template<size_type N>
+    constexpr auto append(char_type const (&str)[N]) const;
 
     template<typename OtherBufferType>
     constexpr auto prepend(static_string<OtherBufferType> const& oth) const;
 
+    template<size_type N>
+    constexpr auto prepend(char_type const (&str)[N]) const;
+
     template<size_type idx, typename OtherBufferType>
     constexpr auto insert(static_string<OtherBufferType> const& oth) const;
 
+    template<size_type idx, size_type N>
+    constexpr auto insert(char_type const (&str)[N]) const;
+
     template<size_type idx, typename OtherBufferType>
     constexpr auto replace(static_string<OtherBufferType> const& oth) const;
+
+    template<size_type idx, size_type N>
+    constexpr auto replace(char_type const (&str)[N]) const;
 
     template<size_type idx, size_type N>
     constexpr auto erase() const;

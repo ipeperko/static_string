@@ -2,7 +2,7 @@ namespace ss {
 
 // Hash
 template<typename CharType, size_type N>
-static constexpr size_t to_hash(std::array<CharType, N> el)
+constexpr size_t to_hash(std::array<CharType, N> el)
 {
     // TODO: replace, this is a toy hash
     size_t res = 5381;
@@ -14,13 +14,6 @@ static constexpr size_t to_hash(std::array<CharType, N> el)
     //    res += (res * 31 + static_cast<size_t>(el[i]));
     //}
     return res;
-}
-
-// c string to std::array
-template<typename CharType, size_type... i>
-static constexpr auto to_array(const CharType* str, std::integer_sequence<size_type, i...>)
-{
-    return std::array{ (str[i])... };
 }
 
 // Concat arrays
@@ -85,12 +78,30 @@ constexpr auto static_string<BufferType>::append(static_string<OtherBufferType> 
     return ss::concat(*this, oth);
 }
 
+template<typename BufferType>
+template<size_type N>
+constexpr auto static_string<BufferType>::append(char_type const (&str)[N]) const
+{
+    auto const arr = to_array(str);
+    using substr_type = decltype(arr);
+    return append(static_string<substr_type>(std::forward<substr_type>(arr)));
+}
+
 // Prepend
 template<typename BufferType>
 template<typename OtherBufferType>
 constexpr auto static_string<BufferType>::prepend(static_string<OtherBufferType> const& oth) const
 {
     return ss::concat(oth, *this);
+}
+
+template<typename BufferType>
+template<size_type N>
+constexpr auto static_string<BufferType>::prepend(char_type const (&str)[N]) const
+{
+    auto const arr = to_array(str);
+    using substr_type = decltype(arr);
+    return prepend(static_string<substr_type>(std::forward<substr_type>(arr)));
 }
 
 // Insert
@@ -111,6 +122,15 @@ constexpr auto static_string<BufferType>::insert(static_string<OtherBufferType> 
     }
 }
 
+template<typename BufferType>
+template<size_type idx, size_type N>
+constexpr auto static_string<BufferType>::insert(char_type const (&str)[N]) const
+{
+    auto const arr = to_array(str);
+    using substr_type = decltype(arr);
+    return insert<idx>(static_string<substr_type>(std::forward<substr_type>(arr)));
+}
+
 // Replace
 template<typename BufferType>
 template<size_type idx, typename OtherBufferType>
@@ -118,15 +138,26 @@ constexpr auto static_string<BufferType>::replace(static_string<OtherBufferType>
 {
     static_assert(idx <= length);
 
-    if constexpr (idx == 0) {
-        return oth + substr<oth.length, length-oth.length>();
+    constexpr auto oth_length = static_string<OtherBufferType>::length;
+
+    if constexpr (idx == 0u) {
+        return oth + substr<oth_length, length - oth_length>();
     }
-    else if constexpr (idx+oth.length == length) {
-        return substr<0, idx>() + oth;
+    else if constexpr (idx + oth_length == length) {
+        return substr<0u, idx>() + oth;
     }
     else {
-        return substr<0, idx>() + oth + substr<idx + oth.length, length - oth.length - idx>();
+        return substr<0u, idx>() + oth + substr<idx + oth_length, length - oth_length - idx>();
     }
+}
+
+template<typename BufferType>
+template<size_type idx, size_type N>
+constexpr auto static_string<BufferType>::replace(char_type const (&str)[N]) const
+{
+    auto const arr = to_array(str);
+    using substr_type = decltype(arr);
+    return replace<idx>(static_string<substr_type>(std::forward<substr_type>(arr)));
 }
 
 // Erase
