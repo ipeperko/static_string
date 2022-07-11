@@ -46,13 +46,11 @@ public:
     template<size_type N>
     constexpr explicit static_string(char const (&str)[N])
         : buffer_(ss::to_array(str))
-        , hash_(ss::to_hash(buffer_))
     {
     }
 
     constexpr explicit static_string(buffer_type&& data)
         : buffer_(std::forward<buffer_type>(data))
-        , hash_(ss::to_hash(buffer_))
     {
     }
 
@@ -82,11 +80,6 @@ public:
     constexpr auto view() const
     {
         return std::string_view(buffer_.data(), buffer_.size());
-    }
-
-    constexpr size_type hash() const
-    {
-        return hash_;
     }
 
     template<char_type c>
@@ -217,9 +210,16 @@ public:
 //        hash_ = to_hash(buffer_);
 //    }
 
+    // Printable
+    template<typename Stream>
+    friend Stream& operator<<(Stream& os, static_string const& s)
+    {
+        os << s.view();
+        return os;
+    }
+
 private:
     buffer_type buffer_;
-    size_type hash_{0};
 };
 
 // Deduction guide for c style const char array

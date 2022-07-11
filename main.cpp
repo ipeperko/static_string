@@ -121,9 +121,9 @@ int main()
     static_assert(merged3.find("hello world, hello world") == 0);
     static_assert(merged3 == "hello world, hello world");
     static_assert(merged3 != "yello world, hello world");
-    static_assert(merged3.hash() == 12301343714320165257u);
+    static_assert(to_hash(merged3.buffer()) == 12301343714320165257u);
     Log() << merged3;
-    Log() << merged3.hash();
+    Log() << to_hash(merged3.buffer());
     // TODO: hash function same as std strings:
     //Log() << std::hash<std::string>{}(merged3.view().data());
     //assert(merged3.hash() == std::hash<std::string>{}(merged3.view().data()));

@@ -179,13 +179,13 @@ constexpr auto static_string<BufferType>::erase() const
     }
 }
 
-// Printable to ostream
-template<typename StringType, std::enable_if_t< std::is_base_of_v<ss::static_string_parameter, StringType>, bool > = false>
-std::ostream& operator<<(std::ostream& os, StringType const& s)
-{
-    os << s.view();
-    return os;
-}
+//// Printable to ostream
+//template<typename StringType, std::enable_if_t< std::is_base_of_v<ss::static_string_parameter, StringType>, bool > = false>
+//std::ostream& operator<<(std::ostream& os, StringType const& s)
+//{
+//    os << s.view();
+//    return os;
+//}
 
 } // namespace ss
 
