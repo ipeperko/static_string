@@ -55,7 +55,6 @@ int main()
     static_assert(s1.substr<2,4>() == "llo ");
     //s1.substr<2,10>(); // should not compile
 
-    //static_assert(s1.prepend("abc ") == static_string("abc hello "));
     static_assert(s1.prepend(static_string("abc ")) == "abc hello ");
     static_assert(s1.prepend("abc ") == "abc hello ");
 
@@ -121,12 +120,13 @@ int main()
     static_assert(merged3.find("hello world, hello world") == 0);
     static_assert(merged3 == "hello world, hello world");
     static_assert(merged3 != "yello world, hello world");
-    static_assert(to_hash(merged3.buffer()) == 12301343714320165257u);
+    static_assert(hash(merged3.buffer()) == 12301343714320165257u);
+    static_assert(hash(merged3) == 12301343714320165257u);
     Log() << merged3;
-    Log() << to_hash(merged3.buffer());
+    Log() << hash(merged3);
     // TODO: hash function same as std strings:
     //Log() << std::hash<std::string>{}(merged3.view().data());
-    //assert(merged3.hash() == std::hash<std::string>{}(merged3.view().data()));
+    //assert(hash(merged3) == std::hash<std::string>{}(merged3.view().data()));
 
     auto copy3 = merged3; // non constexpr
     assert(copy3.find("hello world, hello world") == 0); // only runtime check possible
@@ -143,5 +143,11 @@ int main()
     static_assert(s4.find("aaaQa") == s4.npos);
     static_assert(s4.find("aaaQ") == s4.npos);
 
+    // wide string
+    auto constexpr s5 = static_string(L"wstring");
+    static_assert(s5 == L"wstring");
+    static_assert(s5.find(L"ws") == 0);
+    static_assert(s5.find(L"str") == 1);
+    
     return 0;
 }
