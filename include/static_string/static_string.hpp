@@ -1,5 +1,5 @@
-#ifndef STATIC_STRING_H
-#define STATIC_STRING_H
+#ifndef STATIC_STRING_HPP
+#define STATIC_STRING_HPP
 
 #include <array>
 #include <string>
@@ -18,13 +18,18 @@ class static_string;
 template<typename CharType, size_type... i>
 inline constexpr auto to_array(const CharType* str, std::integer_sequence<size_type, i...>)
 {
-    return std::array{ (str[i])... };
+    if constexpr (sizeof...(i) == 0) {
+        return std::array<CharType, 0>{};
+    }
+    else {
+        return std::array { (str[i])... };
+    }
 }
 
 template<typename CharType, size_type N>
 inline constexpr auto to_array(const CharType (&str)[N])
 {
-    return to_array(str, std::make_integer_sequence<size_type, N - 1> {});
+    return to_array(str, std::make_integer_sequence<size_type, N - 1>{});
 }
 
 // Concat arrays
@@ -94,7 +99,9 @@ public:
     using buffer_type = std::array<CharType, Length>;
 
     static constexpr size_type npos = static_cast<size_type>(-1);
-    static constexpr size_type length = std::size(buffer_type{});
+    static constexpr size_type length = Length;
+
+    static_assert(length == std::size(buffer_type{}));
 
     constexpr static_string() = default;
 
@@ -117,7 +124,9 @@ public:
     static_string& operator=(static_string&&) = delete;
 
 
-    constexpr auto size() const { return buffer_.size(); }
+    constexpr auto size() const { return length; }
+
+    constexpr bool empty() const { return length == 0; }
 
     constexpr auto const& buffer() const { return buffer_; }
 
@@ -133,7 +142,7 @@ public:
 
     constexpr auto view() const
     {
-        return std::string_view(buffer_.data(), buffer_.size());
+        return std::basic_string_view(buffer_.data(), buffer_.size());
     }
 
     template<char_type c>
@@ -199,14 +208,18 @@ public:
     template<typename SubstringType>
     constexpr bool operator==(SubstringType const& substr) const
     {
-        return size() == substr.size() && find(substr) == 0;
+        if constexpr (length == 0) {
+            return length == substr.length;
+        }
+        else {
+            return length == substr.length && find(substr) == 0;
+        }
     }
 
     template<size_type N>
     constexpr bool operator==(char_type const (&substr)[N]) const
     {
-        auto arr = to_array(substr);
-        return operator==(static_string<char_type, arr.size()>(std::forward<decltype(arr)>(arr)));
+        return operator==(static_string<char_type, N-1>(substr));
     }
 
     template<typename SubstringType>
@@ -230,8 +243,7 @@ public:
     template<size_type N>
     constexpr auto append(char_type const (&str)[N]) const
     {
-        auto arr = to_array(str);
-        return append(static_string<char_type, arr.size()>(std::forward<decltype(arr)>(arr)));
+        return append(static_string<char_type, N-1>(str));
     }
 
     template<typename OtherStringType>
@@ -243,8 +255,7 @@ public:
     template<size_type N>
     constexpr auto prepend(char_type const (&str)[N]) const
     {
-        auto arr = to_array(str);
-        return prepend(static_string<char_type, arr.size()>(std::forward<decltype(arr)>(arr)));
+        return prepend(static_string<char_type, N-1>(str));
     }
 
     template<size_type idx, typename OtherStringType>
@@ -266,8 +277,7 @@ public:
     template<size_type idx, size_type N>
     constexpr auto insert(char_type const (&str)[N]) const
     {
-        auto arr = to_array(str);
-        return insert<idx>(static_string<char_type, arr.size()>(std::forward<decltype(arr)>(arr)));
+        return insert<idx>(static_string<char_type, N-1>(str));
     }
 
     template<size_type idx, typename OtherStringType>
@@ -291,8 +301,7 @@ public:
     template<size_type idx, size_type N>
     constexpr auto replace(char_type const (&str)[N]) const
     {
-        auto arr = to_array(str);
-        return replace<idx>(static_string<char_type, arr.size()>(std::forward<decltype(arr)>(arr)));
+        return replace<idx>(static_string<char_type, N-1>(str));
     }
 
     template<size_type idx, size_type N>

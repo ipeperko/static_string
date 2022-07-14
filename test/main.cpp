@@ -1,8 +1,9 @@
-#include "static_string.hpp"
+#include "static_string/static_string.hpp"
+#include <cassert>
 #include <iostream>
 #include <sstream>
-#include <cassert>
 
+// simple logger
 class Log
 {
     std::ostringstream os_;
@@ -19,17 +20,39 @@ public:
 
     template <typename T>
     Log& operator<< (const T& val) {
-        os_  << val;
+        if constexpr (std::is_same_v<T, std::wstring_view>) {
+            // TODO: make more generic
+            std::transform(val.begin(), val.end(), std::ostreambuf_iterator{os_}, [] (typename T::value_type c) {
+                return (char)c;
+            });
+        }
+        else {
+            os_  << val;
+        }
         return *this;
     }
+
+    // required for static strings with wide chars
+    template <typename CharType, size_t N>
+    Log& operator<< (const ss::static_string<CharType, N>& val) {
+        return this->template operator<<(val.view());
+    }
 };
+
 
 int main()
 {
     using namespace ss;
 
+    constexpr static_string s0("");
+    static_assert(s0 .size() == 0);
+    static_assert(s0 == static_string(""));
+    static_assert(s0 == "");
+    static_assert(s0.empty());
+
     constexpr static_string s1("hello ");
     static_assert(s1.size() == 6);
+    static_assert(!s1.empty());
     static_assert(s1.get<0>() == 'h');
     static_assert(s1.find<'e'>() == 1);
     static_assert(s1.find<'l'>() == 2);
@@ -57,10 +80,13 @@ int main()
 
     static_assert(s1.prepend(static_string("abc ")) == "abc hello ");
     static_assert(s1.prepend("abc ") == "abc hello ");
+    static_assert(s1.prepend("") == "hello ");
 
     static_assert(s1.append(static_string("abc")) == "hello abc");
     static_assert(s1.append("abc") == "hello abc");
+    static_assert(s1.append("") == "hello ");
 
+    // insert non-empty string
     static_assert(s1.insert<0>(static_string("abc ")) == "abc hello ");
     static_assert(s1.insert<0>("abc ") == "abc hello ");
     static_assert(s1.insert<6>(static_string("abc ")) == "hello abc ");
@@ -68,6 +94,15 @@ int main()
     static_assert(s1.insert<4>(static_string(" ")) == "hell o ");
     static_assert(s1.insert<4>(" ") == static_string("hell o "));
 
+    // insert empty string
+    static_assert(s1.insert<0>(static_string("")) == "hello ");
+    static_assert(s1.insert<0>("") == "hello ");
+    static_assert(s1.insert<6>(static_string("")) == "hello ");
+    static_assert(s1.insert<6>("") == "hello ");
+    static_assert(s1.insert<4>(static_string("")) == "hello ");
+    static_assert(s1.insert<4>("") == static_string("hello "));
+
+    // replace non-empty string
     static_assert(s1.replace<0>(static_string("yi")) == "yillo ");
     static_assert(s1.replace<0>("yi") == "yillo ");
     static_assert(s1.replace<1>(static_string("ig")) == "higlo ");
@@ -76,11 +111,21 @@ int main()
     static_assert(s1.replace<4>("uu") == "helluu");
     //s1.replace<5>(static_string("uu")); // should not compile
 
+    // replace empty string
+    static_assert(s1.replace<0>(static_string("")) == "hello ");
+    static_assert(s1.replace<0>("") == "hello ");
+    static_assert(s1.replace<1>(static_string("")) == "hello ");
+    static_assert(s1.replace<1>("") == "hello ");
+    static_assert(s1.replace<4>(static_string("")) == "hello ");
+    static_assert(s1.replace<4>("") == "hello ");
+
+    // erase
     static_assert(s1.erase<2, 1>() == "helo ");
     static_assert(s1.erase<0, 1>() == "ello ");
     static_assert(s1.erase<5, 1>() == "hello");
     static_assert(s1.erase<4, 2>() == "hell");
-    // s1.erase<4, 3>() // should not compile
+    // s1.erase<4, 3>(); // should not compile
+    // s1.erase<2, 0>(); // should not compile
 
     static_assert(s1.replace<0>("m").replace<5>("w") == "mellow");
 
@@ -148,6 +193,13 @@ int main()
     static_assert(s5 == L"wstring");
     static_assert(s5.find(L"ws") == 0);
     static_assert(s5.find(L"str") == 1);
-    
+    Log() << s5.view();
+    Log() << s5 ;
+
+    constexpr static_string s6(L"wstring2");
+    static_assert(s6 == L"wstring2");
+    Log() << s6.view();
+    Log() << s6;
+
     return 0;
 }
