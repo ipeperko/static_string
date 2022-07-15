@@ -11,21 +11,17 @@ set(HEADERS
     )
 
 add_library(${CMAKE_PROJECT_NAME}
-        INTERFACE
-        )
+    INTERFACE
+    )
 
-target_include_directories(${CMAKE_PROJECT_NAME} INTERFACE include/)
-
-# --------------------------------------------------------------------------------
-# Install
-# --------------------------------------------------------------------------------
-
-add_library(static_string::static_string ALIAS static_string)
+target_include_directories(${CMAKE_PROJECT_NAME}
+    INTERFACE include/
+    )
 
 install(
-        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/static_string
-        DESTINATION include
-)
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/static_string
+    DESTINATION include
+    )
 
 if (BUILD_TESTS)
     enable_testing()

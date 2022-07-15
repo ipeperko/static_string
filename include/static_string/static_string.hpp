@@ -16,7 +16,7 @@ class static_string;
 
 // c string to std::array
 template<typename CharType, size_type... i>
-inline constexpr auto to_array(const CharType* str, std::integer_sequence<size_type, i...>)
+inline constexpr auto to_array(CharType const* str, std::integer_sequence<size_type, i...>)
 {
     if constexpr (sizeof...(i) == 0) {
         return std::array<CharType, 0>{};
@@ -27,24 +27,24 @@ inline constexpr auto to_array(const CharType* str, std::integer_sequence<size_t
 }
 
 template<typename CharType, size_type N>
-inline constexpr auto to_array(const CharType (&str)[N])
+inline constexpr auto to_array(CharType const (&str)[N])
 {
     return to_array(str, std::make_integer_sequence<size_type, N - 1>{});
 }
 
 // Concat arrays
 template<typename CharType, size_type N1, size_type N2>
-constexpr auto concat(std::array<CharType, N1> lhs, std::array<CharType, N2> rhs)
+constexpr auto concat(std::array<CharType, N1> const& lhs, std::array<CharType, N2> const& rhs)
 {
     std::array<CharType, N1 + N2> result {};
     size_type index = 0;
 
     for (auto& el : lhs) {
-        result[index] = std::move(el);
+        result[index] = el;
         ++index;
     }
     for (auto& el : rhs) {
-        result[index] = std::move(el);
+        result[index] = el;
         ++index;
     }
 
